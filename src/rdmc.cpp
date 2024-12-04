@@ -43,6 +43,8 @@ void rdmc_pseudo_huber(const arma::mat& X, const arma::uword& n,
                        double& objective, bool& converged, 
                        int& nb_iter) {
   
+  Rprintf("\nlambda = %f\n", lambda);
+  
   // initializations
   objective = R_PosInf;
   converged = false;
@@ -52,7 +54,8 @@ void rdmc_pseudo_huber(const arma::mat& X, const arma::uword& n,
   arma::uword i, j, k, l, nb_values = values.n_rows, rank, which_min;
   arma::mat U, V, L_minus_Z;
   arma::vec d;
-  double nuclear_norm, tmp, objective_step2, objective_step2_min,
+  arma::uword nb_elem_change;
+  double nuclear_norm, tmp, objective_step2, objective_step2_min, values_min, 
   loss_norm, loss, loss_min, previous_objective, change;
   while (!converged && nb_iter < max_iter) {
     
@@ -91,6 +94,7 @@ void rdmc_pseudo_huber(const arma::mat& X, const arma::uword& n,
     
     // step 2: update L keeping Z fixed
     // separable problem for missing and observed values in X
+    nb_elem_change = 0;
     
     // update L for cells with missing values in X
     for (l = 0; l < idx_NA.n_rows; l++) {
@@ -115,7 +119,11 @@ void rdmc_pseudo_huber(const arma::mat& X, const arma::uword& n,
         }
       }
       // update the element of L with the argmin of the objective function
-      L(i, j) = values(which_min, j);
+      values_min = values(which_min, j);
+      if (L(i, j) != values_min) {
+        L(i, j) = values_min;
+        nb_elem_change++;
+      }
     }
     
     // update L for cells with observed values in X
@@ -141,6 +149,11 @@ void rdmc_pseudo_huber(const arma::mat& X, const arma::uword& n,
         }
       }
       // update the element of L with the argmin of the objective function
+      // values_min = values(which_min, j);
+      // if (L(i, j) != values_min) {
+      //   L(i, j) = values_min;
+      //   nb_elem_change++;
+      // }
       L(i, j) = values(which_min, j);
       // update the norm given by loss function
       loss_norm += loss_min;
@@ -164,6 +177,10 @@ void rdmc_pseudo_huber(const arma::mat& X, const arma::uword& n,
       change = std::abs((objective - previous_objective) / previous_objective);
       converged = change < conv_tol;
     }
+    
+    // print information on current iteration
+    Rprintf("iteration = %d, nb_elem_change = %d, obj_change = %f\n", 
+            nb_iter, nb_elem_change, change);
     
   }
   
