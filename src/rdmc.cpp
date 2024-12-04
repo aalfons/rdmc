@@ -176,11 +176,14 @@ void rdmc_pseudo_huber(const arma::mat& X, const arma::uword& n,
       // objective function is initialized with infinity
       change = std::abs((objective - previous_objective) / previous_objective);
       converged = change < conv_tol;
+      // print information on current iteration
+      Rprintf("iteration = %d, nb_elem_change = %d, obj_change = %f\n", 
+              nb_iter, nb_elem_change, change);
+    } else {
+      // print information on current iteration
+      Rprintf("iteration = %d, nb_elem_change = %d\n", 
+              nb_iter, nb_elem_change);
     }
-    
-    // print information on current iteration
-    Rprintf("iteration = %d, nb_elem_change = %d, obj_change = %f\n", 
-            nb_iter, nb_elem_change, change);
     
   }
   
